@@ -281,8 +281,8 @@ endif()
 
 if(NOT TARGET opus)
     add_library(opus ${opus_headers} ${opus_sources} ${opus_sources_float} ${Opus_PUBLIC_HEADER})
+    add_library(Opus::opus ALIAS opus)
 endif()
-add_library(Opus::opus ALIAS opus)
 
 get_library_version(OPUS_LIBRARY_VERSION OPUS_LIBRARY_VERSION_MAJOR)
 message(DEBUG "Opus library version: ${OPUS_LIBRARY_VERSION}")
