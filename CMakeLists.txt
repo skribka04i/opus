@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(OpusPackageVersion)
@@ -202,33 +202,47 @@ if(OPUS_CPU_X86 OR OPUS_CPU_X64)
   # PRESUME depends on MAY HAVE, but PRESUME will override runtime detection
   set(OPUS_X86_PRESUME_SSE_HELP_STR "assume target CPU has SSE1 support (override runtime check).")
   set(OPUS_X86_PRESUME_SSE2_HELP_STR "assume target CPU has SSE2 support (override runtime check).")
-  if(OPUS_CPU_X64) # Assume x86_64 has up to SSE2 support
-    cmake_dependent_option(OPUS_X86_PRESUME_SSE
-                           ${OPUS_X86_PRESUME_SSE_HELP_STR}
-                           ON
-                           "OPUS_X86_MAY_HAVE_SSE; NOT OPUS_DISABLE_INTRINSICS"
-                           OFF)
-
-    cmake_dependent_option(OPUS_X86_PRESUME_SSE2
-                           ${OPUS_X86_PRESUME_SSE2_HELP_STR}
-                           ON
-                           "OPUS_X86_MAY_HAVE_SSE2; NOT OPUS_DISABLE_INTRINSICS"
-                           OFF)
+  # PRESUME depends on MAY HAVE, but PRESUME will override runtime detection
+if(OPUS_CPU_X64)  # на 64-битной платформе предполагаем наличие SSE2
+  if(OPUS_X86_MAY_HAVE_SSE AND (NOT OPUS_DISABLE_INTRINSICS))
+    set(_SSE_PRESUME_DEFAULT ON)
   else()
-    cmake_dependent_option(OPUS_X86_PRESUME_SSE
-                           ${OPUS_X86_PRESUME_SSE_HELP_STR}
-                           OFF
-                           "OPUS_X86_MAY_HAVE_SSE; NOT OPUS_DISABLE_INTRINSICS"
-                           OFF)
-
-    cmake_dependent_option(OPUS_X86_PRESUME_SSE2
-                           ${OPUS_X86_PRESUME_SSE2_HELP_STR}
-                           OFF
-                           "OPUS_X86_MAY_HAVE_SSE2; NOT OPUS_DISABLE_INTRINSICS"
-                           OFF)
+    set(_SSE_PRESUME_DEFAULT OFF)
   endif()
-  add_feature_info(OPUS_X86_PRESUME_SSE OPUS_X86_PRESUME_SSE ${OPUS_X86_PRESUME_SSE_HELP_STR})
-  add_feature_info(OPUS_X86_PRESUME_SSE2 OPUS_X86_PRESUME_SSE2 ${OPUS_X86_PRESUME_SSE2_HELP_STR})
+  if(OPUS_X86_MAY_HAVE_SSE2 AND (NOT OPUS_DISABLE_INTRINSICS))
+    set(_SSE2_PRESUME_DEFAULT ON)
+  else()
+    set(_SSE2_PRESUME_DEFAULT OFF)
+  endif()
+
+  cmake_dependent_option(OPUS_X86_PRESUME_SSE
+                         "${OPUS_X86_PRESUME_SSE_HELP_STR}"
+                         ${_SSE_PRESUME_DEFAULT}
+                         "OPUS_X86_MAY_HAVE_SSE"
+                         OFF)
+
+  cmake_dependent_option(OPUS_X86_PRESUME_SSE2
+                         "${OPUS_X86_PRESUME_SSE2_HELP_STR}"
+                         ${_SSE2_PRESUME_DEFAULT}
+                         "OPUS_X86_MAY_HAVE_SSE2"
+                         OFF)
+else()
+  cmake_dependent_option(OPUS_X86_PRESUME_SSE
+                         "${OPUS_X86_PRESUME_SSE_HELP_STR}"
+                         OFF
+                         "OPUS_X86_MAY_HAVE_SSE"
+                         OFF)
+
+  cmake_dependent_option(OPUS_X86_PRESUME_SSE2
+                         "${OPUS_X86_PRESUME_SSE2_HELP_STR}"
+                         OFF
+                         "OPUS_X86_MAY_HAVE_SSE2"
+                         OFF)
+endif()
+
+add_feature_info(OPUS_X86_PRESUME_SSE OPUS_X86_PRESUME_SSE "${OPUS_X86_PRESUME_SSE_HELP_STR}")
+add_feature_info(OPUS_X86_PRESUME_SSE2 OPUS_X86_PRESUME_SSE2 "${OPUS_X86_PRESUME_SSE2_HELP_STR}")
+
 
   set(OPUS_X86_PRESUME_SSE4_1_HELP_STR "assume target CPU has SSE4.1 support (override runtime check).")
   cmake_dependent_option(OPUS_X86_PRESUME_SSE4_1
